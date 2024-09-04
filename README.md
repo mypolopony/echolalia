@@ -1,7 +1,7 @@
 # echolalia
 A Familiar Being
 
-# What
+# What?
 This is a simple effort to make re-create a friend; generating a chatbot using previous conversations.
 
 # Proof
