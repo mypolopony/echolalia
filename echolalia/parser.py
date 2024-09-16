@@ -2,7 +2,6 @@ import re
 from dateutil import parser
 import pandas as pd
 from ._utils import get_matching_s3_objects, read_s3_file
-from .constants import S3_BUCKET_NAME
 from io import BytesIO
 import boto3
 
@@ -27,7 +26,7 @@ class WhatsAppParser(GenericParser):
     NOTA BENE: This parser will omit the last message in the chat for reasons.
     """
     
-    def parse_chat_log(self, chat_log_filename: str) -> list[dict]:
+    def parse_chat_log(self, bucket: str, chat_log_filename: str) -> list[dict]:
         """
         Download a chat log from S3 and parse it into a list of messages.
         """
@@ -43,10 +42,10 @@ class WhatsAppParser(GenericParser):
         
         # Download the chat log from S3
         try:
-            key = list(get_matching_s3_objects(bucket="smcphers-echolalia", search=chat_log_filename))[0]["Key"]
-            chat_log = read_s3_file(bucket=S3_BUCKET_NAME, key=key)
-        except:
-            Exception("Chat log not found")
+            key = list(get_matching_s3_objects(bucket=bucket, search=chat_log_filename))[0]["Key"]
+            chat_log = read_s3_file(bucket=bucket, key=key)
+        except Exception as e:
+            Exception(f"Error reading chat log from S3: {e}")   
 
         # Regex pattern to match the timestamp, user (with spaces and hyphens), and message
         pattern = r'\[(.*?)\] (.+?):\s*(.+)'
@@ -78,5 +77,14 @@ class WhatsAppParser(GenericParser):
                 # If the line doesn't match the pattern, it's part of the current multi-line message
                 assert payload is not None, "Payload not initialized" # TODO: This does not handle the first cast - is this even hit?
                 payload["message"] += f"\n{line}"
+        
+        # Turn into DataFrame
+        messages = pd.DataFrame(messages)
+                                
+        # Sort by timestamp
+        messages = messages.sort_values(by='timestamp')
+
+        # Add time between last messages
+        messages['time_diff'] = messages['timestamp'].diff()
 
         return messages
