@@ -4,6 +4,7 @@ __version__ = "0.0.1"
 
 from ._utils import get_matching_s3_objects
 from .parser import WhatsAppParser
+from .contextualizer import Contextualizer
 
 __all__ = [
     # Utility stuff
@@ -11,4 +12,7 @@ __all__ = [
     ,
     # Parser stuff
     "WhatsAppParser"
+    
+    # Contextualizer stuff
+    "Contextualizer"
 ]
