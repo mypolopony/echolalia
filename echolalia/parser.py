@@ -35,9 +35,9 @@ class WhatsAppParser(GenericParser):
         # - Extract the timestamp
         # - Extract the user (should end with the first colon)
         # - Extract the message (may include colons as well)
-        self.log_pattern = re.compile(r'[^.]*?\[(\d{1,2}/\d{1,2}/\d{2}), (\d{1,2}:\d{2}:\d{2})\/ue202f([APM]{2})\] (.+?): (.*)')
+        self.log_pattern = re.compile(r'[^.]*?\[(\d{1,2}/\d{1,2}/\d{2}), (\d{1,2}:\d{2}:\d{2})\u202f([APM]{2})\] (.+?): (.*)')
 
-    def _sanitize_message(message: str) -> str:
+    def _sanitize_message(self, message: str) -> str:
         """
         Sanitize a line of text from a WhatsApp chat log by removing special characters, excluding certain messages. No
         particular model-based processing is done here, just basic text cleaning for the WhatsAPP chat logs.
@@ -53,22 +53,24 @@ class WhatsAppParser(GenericParser):
             The sanitized message.
         """
         # Individual throaway cases
-        if "/ue200e<attached:" in message:
+        if "\u200e<attached:" in message:
             message = ""
-        elif "/ue200eVoice call" in message:
+        elif "\u200eVoice call" in message:
             message = ""
-        elif "/ue200eMissed voice call" in message:
+        elif "\u200eMissed voice call" in message:
             message = ""
-        elif "/ue200eVideo call" in message:
+        elif "\u200eVideo call" in message:
             message = ""
-        elif "/ue200eYou deleted this message." in message:
+        elif "\u200eYou deleted this message." in message:
             message = ""
-        elif "/ue200eTap to call back" in message:
+        elif "\u200eTap to call back" in message:
+            message = ""
+        elif "\u200eMessages and calls are end-to-end encrypted" in message:
             message = ""
 
         # Alays perform these replacements
-        if " /ue200e<This message was edited>" in message:                      # If the message was edited, save the raw message
-            message = message.replace(" /ue200e<This message was edited>", "")
+        if " /\u200e<This message was edited>" in message:                      # If the message was edited, save the raw message
+            message = message.replace(" /u200e<This message was edited>", "")
         message = re.sub(r'http\S+', '', message)                               # Remove URLs
         message = message.strip()                                               # Remove leading/trailing whitespace
 
@@ -107,8 +109,7 @@ class WhatsAppParser(GenericParser):
             Exception(f"Error reading chat log from S3: {e}")
 
         # Maintain current user and timestamp for multi-line messages
-        current_user, current_timestamp = None
-        current_timestamp = None
+        current_user = current_timestamp = None
 
         # Iterate over each line
         for line in chat_log.splitlines():
@@ -150,17 +151,16 @@ class WhatsAppParser(GenericParser):
                     
                     continue
             finally:
-                # At this point they payload should be as complete as possible
+                # At this point the payload should be as complete as possible
                 if payload["user"] and payload["timestamp"]:
                     all_messages.append(payload)
                 
                 # If at the end of the day, something is really off, exclude any totally disconnected mesages (i.e. 
                 # no user or timestamp) and alert the user because this shouldn't happen
                 else:   
-                    print("[Hopefully just opening empty line, skipping: ", line)
-                    continue
+                    payload["exception"] = "Contextless message"
                     
-                # Update exception if message is empty
+                # Update exception if message is simply empty
                 if not payload["message"]:
                     payload["exception"] = "No content to message"
                 
