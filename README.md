@@ -7,6 +7,10 @@ This is a simple effort to re-create a friend; generating a chatbot using previo
 ## Motivation
 I lost a friend recently.
 
+## Architecture
+### Terraform
+AWS resources Terraformed:
+
 ## Input, Ingestion and Cleanup
 ### WhatsApp
 I started with a raw dump of a WhatsApp log, spanning several years and 50,000+ lines long. This included several line styles, special characters, error messages, etc. I took care of as many special cases as possible to reduce the corpus to simple text. Then, I grouped the multiple messages by speaker, creating chunks of inputs and outputs (essentially questions and answers) between any number of users and the target user. The target user is what that chatbot is attempting to mimic. 
