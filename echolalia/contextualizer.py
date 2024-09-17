@@ -1,8 +1,20 @@
 import pandas as pd
 
 class Contextualizer():
-    def __init__(self, conversation: pd.DataFrame) -> None:
+    """
+    Given a conversation, this class will create inputs and outputs for a chatbot model.
+    """
+    def __init__(self, conversation: pd.DataFrame, target: str) -> None:
+        """
+        Parameters
+        ----------
+        conversation (pd.DataFrame): 
+            A DataFrame containing the conversation
+        target (str): 
+            The target user to generate the model for
+        """
         self.conversation = conversation
+        self.target = target
 
     def sliding_window(self, window_size: int=5) -> pd.DataFrame:
         """
