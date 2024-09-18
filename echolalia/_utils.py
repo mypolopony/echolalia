@@ -100,25 +100,25 @@ def read_s3_file(bucket: str, key: str) -> str:
     return text_content
 
 
-def median_diff(series: pd.Series) -> np.float64:
+def median_diff(series: list) -> pd.Timedelta:
     """
     This function calculates the median difference between consecutive elements in a pandas Series. It
     improves on the native impelementation in that it can handle series of size 1.
 
     Parameters
     ----------
-    series : pd.Series
-        The input series for which to calculate the median difference.
+    series: list
+        The input list of pd.Timestamp [I think]
     
     Returns
     -------
     float
-        The median difference between consecutive elements in the series.
-
+        The median difference between consecutive elements in the series
     """
+    # This is a bizarre thing, for whatever reason the input is sent as a double array
+    series = series[0]
+    
     if len(series) > 1:                 # Normal diff median calculation
-        return series.diff().median()
-    elif len(series) == 1:              # Median is just the singular value
-        return series[0]
-    else:                               # No values to calculate
-        return None
+        return pd.Series(series).diff().median()
+    else len(series) == 1:              # Median is just the singular value
+        return pd.Timedelta(0)
