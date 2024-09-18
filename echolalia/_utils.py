@@ -120,5 +120,7 @@ def median_diff(series: list) -> pd.Timedelta:
     
     if len(series) > 1:                 # Normal diff median calculation
         return pd.Series(series).diff().median()
-    else len(series) == 1:              # Median is just the singular value
+    elif len(series) == 1:              # Median is just the singular value
         return pd.Timedelta(0)
+    else:                               # No values
+        raise Exception("No values in the series")
