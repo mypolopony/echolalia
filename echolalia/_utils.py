@@ -2,6 +2,8 @@ from typing import Any, TypedDict
 from datetime import datetime
 
 import boto3
+import pandas as pd
+import numpy as np
 from io import BytesIO
 
 
@@ -47,12 +49,14 @@ def get_matching_s3_objects(bucket, prefix="", search="", suffix="") -> S3Result
     if isinstance(prefix, str):
         kwargs["Prefix"] = prefix
 
+    # Pagination
     for page in paginator.paginate(**kwargs):
         try:
             contents = page["Contents"]
         except KeyError:
             break
 
+        # Check for matching objects
         for obj in contents:
             key = obj["Key"]
             if search in key and key.endswith(suffix):
@@ -94,3 +98,29 @@ def read_s3_file(bucket: str, key: str) -> str:
     text_content = content.decode('utf-8')
 
     return text_content
+
+
+def median_diff(series: list) -> pd.Timedelta:
+    """
+    This function calculates the median difference between consecutive elements in a pandas Series. It
+    improves on the native impelementation in that it can handle series of size 1.
+
+    Parameters
+    ----------
+    series: list
+        The input list of pd.Timestamp [I think]
+    
+    Returns
+    -------
+    float
+        The median difference between consecutive elements in the series
+    """
+    # This is a bizarre thing, for whatever reason the input is sent as a double array
+    series = series[0]
+    
+    if len(series) > 1:                 # Normal diff median calculation
+        return pd.Series(series).diff().median()
+    elif len(series) == 1:              # Median is just the singular value
+        return pd.Timedelta(0)
+    else:                               # No values
+        raise Exception("No values in the series")
