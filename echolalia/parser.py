@@ -106,7 +106,7 @@ class WhatsAppParser(GenericParser):
             key = list(get_matching_s3_objects(bucket=bucket, search=chat_log_filename))[0]["Key"]
             chat_log = read_s3_file(bucket=bucket, key=key)
         except Exception as e:
-            Exception(f"Error reading chat log from S3: {e}")
+            raise Exception(f"Error reading chat log from S3: {e}")
 
         # Maintain current user and timestamp for multi-line messages
         current_user = current_timestamp = None
