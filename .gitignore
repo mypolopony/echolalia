@@ -163,6 +163,7 @@ cython_debug/
 
 # Terraform
 tf/.terraform/
+tf/terraform.tfstate
 
 # DS_STORE
 .DS_Store
