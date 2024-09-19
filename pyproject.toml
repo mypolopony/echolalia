@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "echolalia"
 version = "0.1.0"
@@ -10,8 +14,28 @@ python = "^3.11"
 pandas = "^2.2.2"
 ipykernel = "^6.29.5"
 boto3 = "^1.35.22"
+ruff = "^0.6.5"
 
+[tool.black]
+line-length = 110
+include = '\.py$'
+exclude = '\.envs/*'
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+format = "grouped"
+ignore-init-module-imports = true
+extend-exclude = [".envs", "tests"]
+select = [
+  "B",   # flake8-bugbear
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "UP",  # pyupgrade
+  "D",   # pydocstyle
+  "I",   # isort
+  "PD",  # pandas-vet
+  "W",   # pycodestyle
+  "SIM", # flake8-simplify
+  "NPY", # numpy-specific
+]

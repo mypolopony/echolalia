@@ -80,8 +80,8 @@ def read_s3_file(bucket: str, key: str) -> str:
         The content of the file as a string.
     """
     # Initialize the S3 client
-    s3 = boto3.client('s3')
-    
+    s3 = boto3.client("s3")
+
     # Create an in-memory bytes buffer
     file_buffer = BytesIO()
 
@@ -95,7 +95,7 @@ def read_s3_file(bucket: str, key: str) -> str:
     content = file_buffer.read()
 
     # If the file contains text, decode it (assuming UTF-8 encoding)
-    text_content = content.decode('utf-8')
+    text_content = content.decode("utf-8")
 
     return text_content
 
@@ -109,7 +109,7 @@ def median_diff(series: list) -> pd.Timedelta:
     ----------
     series: list
         The input list of pd.Timestamp [I think]
-    
+
     Returns
     -------
     float
@@ -117,10 +117,10 @@ def median_diff(series: list) -> pd.Timedelta:
     """
     # This is a bizarre thing, for whatever reason the input is sent as a double array
     series = series[0]
-    
-    if len(series) > 1:                 # Normal diff median calculation
+
+    if len(series) > 1:  # Normal diff median calculation
         return pd.Series(series).diff().median()
-    elif len(series) == 1:              # Median is just the singular value
+    elif len(series) == 1:  # Median is just the singular value
         return pd.Timedelta(0)
-    else:                               # No values
+    else:  # No values
         raise Exception("No values in the series")
