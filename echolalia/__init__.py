@@ -1,4 +1,4 @@
-"""Echolalia is a package for creating chatbor-based conversational agents."""
+"""Echolalia is a package for creating chatbot-based conversational agents."""
 
 __version__ = "0.0.1"
 
