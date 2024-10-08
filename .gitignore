@@ -38,9 +38,15 @@ pip-delete-this-directory.txt
 # Environment
 .env
 
-# Terraform
-tf/.terraform/
-tf/terraform.tfstate
+# Terraform state files
+*.tfstate
+*.tfstate.backup
+
+# Terraform variable files
+*.tfvars
+
+# Terraform CLI configuration files
+.terraform/
 
 # DS_STORE
 .DS_Store
