@@ -11,6 +11,7 @@ __all__ = [
     "get_matching_s3_objects"
     # Parser stuff
     "WhatsAppParser"
+    "iMesssageParser"
     # Contextualizer stuff
     "Contextualizer"
 ]
