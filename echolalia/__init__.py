@@ -1,6 +1,6 @@
 """Echolalia is a package for creating chatbor-based conversational agents."""
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 from ._utils import get_matching_s3_objects
 from .parser import WhatsAppParser
