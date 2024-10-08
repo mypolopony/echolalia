@@ -9,9 +9,11 @@ from .contextualizer import Contextualizer
 __all__ = [
     # Utility stuff
     "get_matching_s3_objects"
+
     # Parser stuff
     "WhatsAppParser"
     "iMesssageParser"
+    
     # Contextualizer stuff
     "Contextualizer"
 ]
