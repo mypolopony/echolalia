@@ -2,7 +2,7 @@
 A Familiar Being
 
 ## What?
-This is a simple effort to re-create a friend; generating a chatbot using previous conversations.
+This is a simple effort to re-create a friend; generating a chatbot using previous conversations over several years.
 
 ## Architecture
 ### Terraform
@@ -10,6 +10,17 @@ AWS resources Terraformed:
 
 ## Buld management
 - Using `pyproject.toml` and `poetry` for dependancy management. Locally, the virtual environment is sym-linked to the poetry, so using `poetry add [package]` installs it in the local environment as well as sets it as a dependancy for use when building the Docker image.
+
+## Running locally with bash entrypoint
+```bash
+docker run -i -d -v ~/.aws:/root/.aws:ro --entrypoint=bash echolalia
+dde1e5d84211be972e88ca377a4c0069db3461443c0dd53cd9f421f1a85b015b
+docker exec -it dde1e5d84211 bash
+```
+
+# Debugging with VS code (multi-stage build) [always rebuild]
+docker build --target=debugger -t echolalia-debugger .
+docker run -v ~/.aws:/root/.aws:ro -p 5678:5678 echolalia-debugger run.py
 
 ## Input, Ingestion and Cleanup
 

@@ -3,11 +3,9 @@ from datetime import datetime
 import pandas as pd
 
 from echolalia.parser import WhatsAppParser
+from echolalia.constants import S3_BUCKET_NAME, CHAT_LOG_FILENAME
 
 parser = WhatsAppParser()
-
-S3_BUCKET_NAME = "smcphers-echolalia"
-CHAT_LOG_FILENAME = "data/_chat.txt"
 
 print(f"Parsing WhatsApp chat... for s3://{S3_BUCKET_NAME}/{CHAT_LOG_FILENAME}")
 
