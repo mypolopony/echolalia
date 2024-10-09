@@ -23,16 +23,24 @@ docker build --target=debugger -t echolalia-debugger .
 docker run -v ~/.aws:/root/.aws:ro -p 5678:5678 echolalia-debugger run.py
 
 ## Input, Ingestion and Cleanup
+
 ### WhatsApp
 I started with a raw dump of a WhatsApp log, spanning several years and 50,000+ lines long. This included several line styles, special characters, error messages, etc. I took care of as many special cases as possible to reduce the corpus to simple text. Then, I grouped the multiple messages by speaker, creating chunks of inputs and outputs (essentially questions and answers) between any number of users and the target user. The target user is what that chatbot is attempting to mimic. 
 
 # iMessage
-iMessage chat logs can be accessed with some great tools (https://github.com/reagentx/imessage-exporter) to text or HTML format. 
+iMessage chat logs can be accessed with some great tools (https://github.com/reagentx/imessage-exporter) to text or HTML format: 
 
-
-
-## Pruning for modeling
---
+```
+git clone https://github.com/ReagentX/imessage-exporter.git
+cd imessage-exporter
+brew install cargo
+brew install rust
+brew install rustup
+rustup target add x86_64-apple-darwin
+rustup default stable
+./imessage-exporter -f txt -o output
+subl +14156839285.txt
+```
 
 ## Notebooks
 `workbook.py` is for debugging  
@@ -42,7 +50,6 @@ iMessage chat logs can be accessed with some great tools (https://github.com/rea
 I should be able to ask the bot contextually dependent phrases (inside jokes, for example, developed over time), and it should respond positively.
 
 ## Results
-
 
 ## Improvements
 
