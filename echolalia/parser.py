@@ -83,16 +83,6 @@ class WhatsAppParser(GenericParser):
     Parser class for WhatsApp chat logs.
     """
 
-    '''
-    class WhatsAPPLineException(Exception):
-        """
-        Exception class for WhatsApp messages.
-        """
-        def __init__(self, message):
-            self.message = message
-            super().__init__(self.message)
-    '''
-
     def __init__(self):
         self.messages = []
 
