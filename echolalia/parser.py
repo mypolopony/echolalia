@@ -16,23 +16,82 @@ class GenericParser(object):
     def __init__(self):
         pass
 
+    def download_chat_log(self, bucket: str, chat_log_filename: str) -> str:
+        """
+        Download a chat log from S3.
+
+        Parameters
+        ----------
+        bucket : str
+            The S3 bucket containing the chat log.
+        chat_log_filename : str
+            The filename of the chat log.
+
+        Returns
+        -------
+        str
+            The chat log as a string.
+        """
+        # Download the chat log from S3
+        try:
+            key = list(get_matching_s3_objects(bucket=bucket, search=chat_log_filename))[0]["Key"]
+            chat_log = read_s3_file(bucket=bucket, key=key)
+        except Exception as e:
+            raise Exception(f"Error reading chat log from S3: {e}")
+
+        return chat_log
+
+    def combine_messages(self, messages: pd.DataFrame) -> pd.DataFrame:
+        """
+        Combine messages into groups based on the user and timestamp. This combines multi-line messages into a single
+        message and counts the number of messages in each, as well as collecting the timestamps and individual chatlines.
+
+        Parameters
+        ----------
+        messages : pd.DataFrame
+            A DataFrame containing the messages to combine.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the combined messages.
+        """
+        # Filter out messages with exceptions
+        messages = messages[~messages["exception"].apply(lambda x: isinstance(x, str))]
+
+        # Sort by timestamp
+        messages = messages.sort_values(by="timestamp")
+
+        # Add time between last messages
+        messages["time_diff"] = messages["timestamp"].diff().dt.total_seconds()
+
+        # Create a "group" whenever the user changes
+        messages["group"] = (messages["user"] != messages["user"].shift()).cumsum()
+        messages["num_messages"] = None
+
+        # Group by this new "group" column and concatenate the values in "messages"
+        return (
+            messages.groupby("group", as_index=False)
+            .agg(
+                {
+                    "user": "first",  # Take the first value of "user" for each group
+                    "timestamp": list,  # Take the first value of "timestamp" for each group
+                    "message": " ".join,  # Concatenate the values of "message"
+                    "num_messages": "size",  # Count the number of messages
+                }
+            )
+            .drop("group", axis=1)
+        )
+
 
 class WhatsAppParser(GenericParser):
     """
     Parser class for WhatsApp chat logs.
     """
 
-    '''
-    class WhatsAPPLineException(Exception):
-        """
-        Exception class for WhatsApp messages.
-        """
-        def __init__(self, message):
-            self.message = message
-            super().__init__(self.message)
-    '''
-
     def __init__(self):
+        self.messages = []
+
         # Initialize the log pattern. Rather bespoke, but it works fur current version [24.15.80 (628510191)] of WatsApp logs.
         # - Ignore any characters before the timestamp
         # - Extract the timestamp
@@ -103,15 +162,8 @@ class WhatsAppParser(GenericParser):
             A DataFrame containing the parsed chat log.
         """
 
-        # Initialize a list of messages
-        all_messages = []
-
         # Download the chat log from S3
-        try:
-            key = list(get_matching_s3_objects(bucket=bucket, search=chat_log_filename))[0]["Key"]
-            chat_log = read_s3_file(bucket=bucket, key=key)
-        except Exception as e:
-            raise Exception(f"Error reading chat log from S3: {e}")
+        chat_log = self.download_chat_log(bucket=bucket, chat_log_filename=chat_log_filename)
 
         # Maintain current user and timestamp for multi-line messages
         current_user = current_timestamp = None
@@ -152,7 +204,7 @@ class WhatsAppParser(GenericParser):
             finally:
                 # At this point the payload should be as complete as possible
                 if payload["user"] and payload["timestamp"]:
-                    all_messages.append(payload)
+                    self.messages.append(payload)
 
                 # If at the end of the day, something is really off, exclude any totally disconnected mesages (i.e.
                 # no user or timestamp) and alert the user because this shouldn't happen
@@ -165,5 +217,101 @@ class WhatsAppParser(GenericParser):
 
                 continue
 
+        # DataFrame it
+        self.messages = pd.DataFrame(self.messages)
+
+        # Validate and concatenate the messages
+        try:
+            self.messages = self.combine_messages(self.messages)
+        except Exception as e:
+            raise Exception(f"Error validating chat log: {e}")
+
         # Return as DataFrame with all messages cleansed and accounted for and all errors noted
-        return pd.DataFrame(all_messages)
+        return pd.DataFrame(self.messages)
+
+
+class iMessageParser(GenericParser):
+    """
+    Parser class for iMessage / iChat chat logs.
+
+    This utelizes open source code from https://github.com/ReagentX/imessage-exporter which turns the iMessage database
+    into text files. This parser is designed to work with those text files.
+    """
+
+    def __init__(self):
+        self.messages = []
+
+        # Initialize the timestamp pattern
+        self.timestamp_pattern = re.compile(r"[A-Za-z]{3} \d{1,2}, \d{4} \s*\d{1,2}:\d{2}:\d{2} (AM|PM)")
+
+    def _sanitize_message(self, message: str) -> str:
+        """
+        Sanitize a line of text from an iMessage chat log by excluding certain messages.
+
+        Parameters
+        ----------
+        message : str
+            The message to sanitize.
+
+        Returns
+        -------
+        str
+            The sanitized message.
+        """
+        # Individual throaway image messages
+        if message.endswith("heic") or message.endswith("jpeg") or message.endswith("png"):
+            message = ""
+        return message
+
+    def parse_chat_log(self, bucket: str, chat_log_filename: str) -> pd.DataFrame:
+        # Download the chat log from S3
+        chat_log = self.download_chat_log(bucket=bucket, chat_log_filename=chat_log_filename)
+
+        # Initialize payload
+        payload = None
+
+        # For line in chat log, if the timestamp is found, create a new message object based on the remaining content. Keep
+        # track of the current user and timestamp for multi-line messages.
+        lines = iter(chat_log.splitlines())
+        for line in lines:
+            # Search for the timestamp
+            match = re.search(self.timestamp_pattern, line)
+
+            # Extract the timestamp if found and convert to datetime
+            if match:  # A new message is starting
+                # Add if there has been a previous line
+                if payload:
+                    payload["message"] = payload["message"].strip()
+                    if payload["message"]:
+                        self.messages.append(payload)
+
+                # Initialize the return payload
+                payload = {"timestamp": None, "user": None, "message": "", "exception": None}
+
+                # Extract the timestamp string
+                timestamp_str = match.group(0)
+
+                # Convert the timestamp string to a datetime object
+                payload["timestamp"] = datetime.strptime(timestamp_str, "%b %d, %Y %I:%M:%S %p")
+
+                # Next comes the source
+                payload["user"] = next(lines)
+            else:
+                # We're in a message, add it to the payload
+                payload["message"] += " " + line  # Odd way to append, but it works
+
+        # The sad, final message
+        payload["message"] = payload["message"].strip()
+        self.messages.append(payload)
+
+        # DataFrame it
+        self.messages = pd.DataFrame(self.messages)
+
+        # Validate and concatenate the messages
+        try:
+            self.messages = self.combine_messages(self.messages)
+        except Exception as e:
+            raise Exception(f"Error validating chat log: {e}")
+
+        # Return as DataFrame with all messages cleansed and accounted for and all errors noted
+        return pd.DataFrame(self.messages)

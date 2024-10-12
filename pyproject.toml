@@ -24,9 +24,9 @@ exclude = '\.envs/*'
 [tool.ruff]
 line-length = 110
 target-version = "py310"
-format = "grouped"
-ignore-init-module-imports = true
 extend-exclude = [".envs", "tests"]
+
+[tool.ruff.lint]
 select = [
   "B",   # flake8-bugbear
   "E",   # pycodestyle
@@ -39,3 +39,8 @@ select = [
   "SIM", # flake8-simplify
   "NPY", # numpy-specific
 ]
+# Avoid enforcing docstring style
+ignore = ["D212"]
+
+[tool.ruff.format]
+quote-style = "double"

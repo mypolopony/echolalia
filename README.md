@@ -38,9 +38,10 @@ brew install rust
 brew install rustup
 rustup target add x86_64-apple-darwin
 rustup default stable
-./imessage-exporter -f txt -o output
-subl +14156839285.txt
+/Users/mypolopony/.cargo/bin/imessage-exporter -f txt -o output
 ```
+
+Output will be `output/+[PHONE_NUMBER].txt`
 
 ## Notebooks
 `workbook.py` is for debugging  
