@@ -38,9 +38,9 @@ class GenericParser(object):
             chat_log = read_s3_file(bucket=bucket, key=key)
         except Exception as e:
             raise Exception(f"Error reading chat log from S3: {e}")
-        
+
         return chat_log
-    
+
     def combine_messages(self, messages: pd.DataFrame) -> pd.DataFrame:
         """
         Combine messages into groups based on the user and timestamp. This combines multi-line messages into a single
@@ -68,14 +68,20 @@ class GenericParser(object):
         # Create a "group" whenever the user changes
         messages["group"] = (messages["user"] != messages["user"].shift()).cumsum()
         messages["num_messages"] = None
-        
+
         # Group by this new "group" column and concatenate the values in "messages"
-        return messages.groupby("group", as_index=False).agg({
-            "user": "first",                 # Take the first value of "user" for each group
-            "timestamp": list,               # Take the first value of "timestamp" for each group
-            "message": " ".join,             # Concatenate the values of "message"
-            "num_messages": "size",          # Count the number of messages
-        }).drop("group", axis=1)
+        return (
+            messages.groupby("group", as_index=False)
+            .agg(
+                {
+                    "user": "first",  # Take the first value of "user" for each group
+                    "timestamp": list,  # Take the first value of "timestamp" for each group
+                    "message": " ".join,  # Concatenate the values of "message"
+                    "num_messages": "size",  # Count the number of messages
+                }
+            )
+            .drop("group", axis=1)
+        )
 
 
 class WhatsAppParser(GenericParser):
@@ -210,7 +216,7 @@ class WhatsAppParser(GenericParser):
                     payload["exception"] = "No content to message"
 
                 continue
-        
+
         # DataFrame it
         self.messages = pd.DataFrame(self.messages)
 
@@ -222,7 +228,7 @@ class WhatsAppParser(GenericParser):
 
         # Return as DataFrame with all messages cleansed and accounted for and all errors noted
         return pd.DataFrame(self.messages)
-    
+
 
 class iMessageParser(GenericParser):
     """
@@ -236,10 +242,8 @@ class iMessageParser(GenericParser):
         self.messages = []
 
         # Initialize the timestamp pattern
-        self.timestamp_pattern = re.compile(
-            r"[A-Za-z]{3} \d{1,2}, \d{4} \s*\d{1,2}:\d{2}:\d{2} (AM|PM)"
-        )
-    
+        self.timestamp_pattern = re.compile(r"[A-Za-z]{3} \d{1,2}, \d{4} \s*\d{1,2}:\d{2}:\d{2} (AM|PM)")
+
     def _sanitize_message(self, message: str) -> str:
         """
         Sanitize a line of text from an iMessage chat log by excluding certain messages.
@@ -256,7 +260,7 @@ class iMessageParser(GenericParser):
         """
         # Individual throaway image messages
         if message.endswith("heic") or message.endswith("jpeg") or message.endswith("png"):
-            message = ""    
+            message = ""
         return message
 
     def parse_chat_log(self, bucket: str, chat_log_filename: str) -> pd.DataFrame:
@@ -274,7 +278,7 @@ class iMessageParser(GenericParser):
             match = re.search(self.timestamp_pattern, line)
 
             # Extract the timestamp if found and convert to datetime
-            if match: # A new message is starting
+            if match:  # A new message is starting
                 # Add if there has been a previous line
                 if payload:
                     payload["message"] = payload["message"].strip()
@@ -294,7 +298,7 @@ class iMessageParser(GenericParser):
                 payload["user"] = next(lines)
             else:
                 # We're in a message, add it to the payload
-                payload["message"] += " " + line    # Odd way to append, but it works
+                payload["message"] += " " + line  # Odd way to append, but it works
 
         # The sad, final message
         payload["message"] = payload["message"].strip()
@@ -302,7 +306,7 @@ class iMessageParser(GenericParser):
 
         # DataFrame it
         self.messages = pd.DataFrame(self.messages)
-            
+
         # Validate and concatenate the messages
         try:
             self.messages = self.combine_messages(self.messages)
