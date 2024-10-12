@@ -6,68 +6,6 @@ from ._utils import get_matching_s3_objects, read_s3_file
 from io import BytesIO
 import boto3
 
-class ChatlogSchema(object):
-    """
-    Class to define the schema of a chat log. This is a simple class that contains the column names and data types for
-    a chat log.
-    """
-
-    def __init__(self, columns: list):
-        """
-        Initialize the schema with the column names and data types.
-
-        Parameters
-        ----------
-        columns : list
-            A list of tuples containing the column name and data type. The data type should be a string that can be
-            passed to the `pd.DataFrame.astype()` method.
-        """
-        self.columns = columns
-
-    def get_columns(self) -> list:
-        """
-        Get the column names for the schema.
-
-        Returns
-        -------
-        list
-            A list of column names.
-        """
-        return [col[0] for col in self.columns]
-
-    def get_dtypes(self) -> dict:
-        """
-        Get the data types for the schema.
-
-        Returns
-        -------
-        dict
-            A dictionary of column names and data types.
-        """
-        return {col[0]: col[1] for col in self.columns}
-
-    def get_schema(self) -> dict:
-        """
-        Get the schema as a dictionary.
-
-        Returns
-        -------
-        dict
-            A dictionary of column names and data types.
-        """
-        return self.get_dtypes()
-
-    def get_schema_df(self) -> pd.DataFrame:
-        """
-        Get the schema as a DataFrame.
-
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame containing the schema.
-        """
-        return pd.DataFrame(self.columns, columns=["column", "dtype"])
-
 
 class GenericParser(object):
     """
@@ -103,22 +41,6 @@ class GenericParser(object):
         
         return chat_log
     
-    def validate_chat_log(self, chat_log: str) -> bool:
-        """
-        Validate a chat log to ensure it is in the correct format.
-
-        Parameters
-        ----------
-        chat_log : str
-            The chat log to validate.
-
-        Returns
-        -------
-        bool
-            True if the chat log is valid, False otherwise.
-        """
-        return True
-    
     def combine_messages(self, messages: pd.DataFrame) -> pd.DataFrame:
         """
         Combine messages into groups based on the user and timestamp. This combines multi-line messages into a single
@@ -153,8 +75,7 @@ class GenericParser(object):
             "timestamp": list,               # Take the first value of "timestamp" for each group
             "message": " ".join,             # Concatenate the values of "message"
             "num_messages": "size",          # Count the number of messages
-            "chatline": ". ".join            # Concatenate the values of "chatline"
-        })
+        }).drop("group", axis=1)
 
 
 class WhatsAppParser(GenericParser):
@@ -173,13 +94,13 @@ class WhatsAppParser(GenericParser):
     '''
 
     def __init__(self):
+        self.messages = []
+
         # Initialize the log pattern. Rather bespoke, but it works fur current version [24.15.80 (628510191)] of WatsApp logs.
         # - Ignore any characters before the timestamp
         # - Extract the timestamp
         # - Extract the user (should end with the first colon)
         # - Extract the message (may include colons as well)
-        self.messages = []
-
         self.log_pattern = re.compile(
             r"[^.]*?\[(\d{1,2}/\d{1,2}/\d{2}), (\d{1,2}:\d{2}:\d{2})\u202f([APM]{2})\] (.+?): (.*)"
         )
@@ -305,8 +226,7 @@ class WhatsAppParser(GenericParser):
 
         # Validate and concatenate the messages
         try:
-            assert(self.validate_chat_log(self.messages))
-            self.combine_messages(self.messages)
+            self.messages = self.combine_messages(self.messages)
         except Exception as e:
             raise Exception(f"Error validating chat log: {e}")
 
@@ -323,10 +243,31 @@ class iMessageParser(GenericParser):
     """
 
     def __init__(self):
+        self.messages = []
+
         # Initialize the timestamp pattern
         self.timestamp_pattern = re.compile(
             r"[A-Za-z]{3} \d{1,2}, \d{4} \s*\d{1,2}:\d{2}:\d{2} (AM|PM)"
         )
+    
+    def _sanitize_message(self, message: str) -> str:
+        """
+        Sanitize a line of text from an iMessage chat log by excluding certain messages.
+
+        Parameters
+        ----------
+        message : str
+            The message to sanitize.
+
+        Returns
+        -------
+        str
+            The sanitized message.
+        """
+        # Individual throaway image messages
+        if message.endswith("heic") or message.endswith("jpeg") or message.endswith("png"):
+            message = ""    
+        return message
 
     def parse_chat_log(self, bucket: str, chat_log_filename: str) -> pd.DataFrame:
         # Download the chat log from S3
@@ -337,19 +278,21 @@ class iMessageParser(GenericParser):
 
         # For line in chat log, if the timestamp is found, create a new message object based on the remaining content. Keep
         # track of the current user and timestamp for multi-line messages.
-        lines = chat_log.splitlines()
+        lines = iter(chat_log.splitlines())
         for line in lines:
-            # Add if there has been a previous line
-            if payload:
-                self.messages.append(payload)
-
             # Search for the timestamp
             match = re.search(self.timestamp_pattern, line)
 
             # Extract the timestamp if found and convert to datetime
             if match: # A new message is starting
+                # Add if there has been a previous line
+                if payload:
+                    payload["message"] = payload["message"].strip()
+                    if payload["message"]:
+                        self.messages.append(payload)
+
                 # Initialize the return payload
-                payload = {"timestamp": None, "source": None, "message": ""}
+                payload = {"timestamp": None, "user": None, "message": "", "exception": None}
 
                 # Extract the timestamp string
                 timestamp_str = match.group(0)
@@ -358,14 +301,23 @@ class iMessageParser(GenericParser):
                 payload["timestamp"] = datetime.strptime(timestamp_str, "%b %d, %Y %I:%M:%S %p")
 
                 # Next comes the source
-                payload["source"] = next(lines)
+                payload["user"] = next(lines)
             else:
                 # We're in a message, add it to the payload
-                if payload["message"]:
-                    payload["message"] += ' ' + line    # Odd way to append, but it works
+                payload["message"] += " " + line    # Odd way to append, but it works
+
+        # The sad, final message
+        payload["message"] = payload["message"].strip()
+        self.messages.append(payload)
+
+        # DataFrame it
+        self.messages = pd.DataFrame(self.messages)
             
-            # The sad, final message
-            self.messages.append(payload)
-            
+        # Validate and concatenate the messages
+        try:
+            self.messages = self.combine_messages(self.messages)
+        except Exception as e:
+            raise Exception(f"Error validating chat log: {e}")
+
         # Return as DataFrame with all messages cleansed and accounted for and all errors noted
         return pd.DataFrame(self.messages)
