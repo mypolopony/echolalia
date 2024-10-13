@@ -7,7 +7,6 @@ import pandas as pd
 from dateutil import parser
 
 from ._utils import get_matching_s3_objects, read_s3_file
-from echolalia.parser import WhatsAppParser, iMessageParser
 
 
 class GenericParser(object):
@@ -288,9 +287,6 @@ class iMessageParser(GenericParser):
         # track of the current user and timestamp for multi-line messages.
         lines = iter(chat_log.splitlines())
         for line in lines:
-
-            if "He gave us catholic school girls so" in line:
-                print("Found it")
             # Search for the timestamp
             match = re.search(self.timestamp_pattern, line)
 
