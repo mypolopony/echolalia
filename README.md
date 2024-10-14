@@ -11,6 +11,8 @@ AWS resources Terraformed:
 ## Buld management
 - Using `pyproject.toml` and `poetry` for dependancy management. Locally, the virtual environment is sym-linked to the poetry, so using `poetry add [package]` installs it in the local environment as well as sets it as a dependancy for use when building the Docker image.
 
+As a quirk, SageMaker expects `requirements.txt` as well, so it's necessary to do `poetry export -f requirements.txt --output requirements.txt --without-hashes` to keep that file up to date.
+
 ## Running locally with bash entrypoint
 ```bash
 docker run -i -d -v ~/.aws:/root/.aws:ro --entrypoint=bash echolalia
