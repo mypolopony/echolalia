@@ -47,6 +47,9 @@ Output will be `output/+[PHONE_NUMBER].txt`
 `workbook.py` is for debugging  
 `demo.py` showcases some of the end-user cases as well as some data science analytics
 
+## Training
+Training is done with AWS SageMaker on a GPU-enabled `ml.g4dn.xlarge` machine. Training is set up via a `training_manifest.yaml`, read from S3, which indicates not only the nature of the multiple sources of logs but also the parameters of the training regimen. 
+
 ## Proof
 I should be able to ask the bot contextually dependent phrases (inside jokes, for example, developed over time), and it should respond positively.
 
