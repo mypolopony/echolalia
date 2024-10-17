@@ -16,6 +16,7 @@ from torch.utils.data import Dataset
 
 from echolalia.constants import S3_BUCKET_NAME, SAGEMAKER_ARN
 from echolalia.parser import WhatsAppParser, iMessageParser
+from echolalia._utils import read_s3_file
 
 
 class ConversationDataset(Dataset):
@@ -47,18 +48,12 @@ def parse_args():
 
     return parser.parse_args()
 
-# Load the YAML file
-def load_manifest(config_path):
-    with open(config_path, 'r') as file:
-        manifest = yaml.safe_load(file)
-    return manifest
-
 if __name__ == "__main__":
     # Parse arguments
     args = parse_args()
 
-    # Load manifest
-    manifest = load_manifest(args.manifest)
+    # Load manifest from S3
+    manifest = yaml.safe_load(read_s3_file(S3_BUCKET_NAME, args.manifest))
 
     # Gather messages for each source
     for source in manifest["sources"]:
