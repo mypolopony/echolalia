@@ -2,7 +2,7 @@
 # Specifies the desired inputs for training the model.
 
 # Name the manifest
-name: "Training Manifest v.0.1
+name: "Training Manifest v.0.1"
 
 # Define sources
 sources:
@@ -12,6 +12,10 @@ sources:
  - user: "Cat"
    logfile: "data/Cat_WhatsApp.txt"
    type: "WhatsApp"
+
+# Define the model type
+# model_name: "distilgpt2"
+model_name: "gpt2"
 
 # Define training arguments
 training_args:
