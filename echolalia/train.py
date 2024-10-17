@@ -35,8 +35,8 @@ class ConversationDataset(Dataset):
 
     def __getitem__(self, idx):
         return {
-            'input_ids': self.input_ids[idx],
-            'labels': self.output_ids[idx]  # Model needs 'labels' during training
+            "input_ids": self.input_ids[idx],
+            "labels": self.output_ids[idx]  # Model needs labels during training
         }
 
 # Define the argument parser
@@ -85,23 +85,20 @@ if __name__ == "__main__":
     # Combine all sources into a single DataFrame
     training_data = pd.concat([source["training_data"] for source in manifest["sources"]])
 
-    # Model (distilgpt2 is more lightweight)
-    tokenizer = AutoTokenizer.from_pretrained('distilgpt2')
-    model = AutoModelForCausalLM.from_pretrained('distilgpt2')
-
     # Model definition
-    model = model
+    tokenizer = AutoTokenizer.from_pretrained(manifest["model_name"])
+    model = AutoModelForCausalLM.from_pretrained(manifest["model_name"])
 
     # Set pad_token to eos_token
     tokenizer.pad_token = tokenizer.eos_token
 
     # Tokenize the inputs and outputs
-    training_data['input_ids'] = training_data['input'].apply(lambda x: tokenizer.encode(x, truncation=True, padding='max_length', max_length=512))
-    training_data['output_ids'] = training_data['output'].apply(lambda x: tokenizer.encode(x, truncation=True, padding='max_length', max_length=512))
+    training_data["input_ids"] = training_data["input"].apply(lambda x: tokenizer.encode(x, truncation=True, padding="max_length", max_length=512))
+    training_data["output_ids"] = training_data["output"].apply(lambda x: tokenizer.encode(x, truncation=True, padding="max_length", max_length=512))
 
     # Convert columns to lists
-    input_ids = training_data['input_ids'].tolist()
-    output_ids = training_data['output_ids'].tolist()
+    input_ids = training_data["input_ids"].tolist()
+    output_ids = training_data["output_ids"].tolist()
 
     # Convert lists to PyTorch tensors
     input_ids_tensor = torch.tensor(input_ids)
@@ -131,4 +128,4 @@ if __name__ == "__main__":
     trainer.train()
 
     # Save the model
-    trainer.save_model('./model')
+    trainer.save_model("./model")
