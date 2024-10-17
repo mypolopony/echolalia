@@ -15,6 +15,12 @@ pandas = "^2.2.2"
 ipykernel = "^6.29.5"
 boto3 = "^1.35.22"
 ruff = "^0.6.5"
+transformers = {extras = ["torch"], version = "^4.45.2"}
+sagemaker = "^2.232.2"
+torch = "^2.4.1"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
 
 [tool.black]
 line-length = 110

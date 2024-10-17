@@ -1,10 +1,12 @@
 import re
-from dateutil import parser
 from datetime import datetime
-import pandas as pd
-from ._utils import get_matching_s3_objects, read_s3_file
 from io import BytesIO
+
 import boto3
+import pandas as pd
+from dateutil import parser
+
+from ._utils import get_matching_s3_objects, read_s3_file
 
 
 class GenericParser(object):
@@ -258,9 +260,20 @@ class iMessageParser(GenericParser):
         str
             The sanitized message.
         """
-        # Individual throaway image messages
-        if message.endswith("heic") or message.endswith("jpeg") or message.endswith("png"):
+        # Remove filenames (images)
+        base_pattern = r"^.+\.\w+"
+    
+        # Check if the string only contains the filename
+        if re.fullmatch(base_pattern, message):
+            message = ""  # If only the filename is present, return an empty string
+        else:
+            # If there is additional text, remove just the filename
+            message = re.sub(base_pattern + r"\s+", "", message)
+
+        # Remove out of order / redundant messages
+        if "This message responded to an earlier message." in message:
             message = ""
+        
         return message
 
     def parse_chat_log(self, bucket: str, chat_log_filename: str) -> pd.DataFrame:
@@ -281,7 +294,7 @@ class iMessageParser(GenericParser):
             if match:  # A new message is starting
                 # Add if there has been a previous line
                 if payload:
-                    payload["message"] = payload["message"].strip()
+                    payload["message"] = self._sanitize_message(payload["message"].strip())
                     if payload["message"]:
                         self.messages.append(payload)
 
@@ -295,10 +308,10 @@ class iMessageParser(GenericParser):
                 payload["timestamp"] = datetime.strptime(timestamp_str, "%b %d, %Y %I:%M:%S %p")
 
                 # Next comes the source
-                payload["user"] = next(lines)
+                payload["user"] = next(lines).strip()
             else:
                 # We're in a message, add it to the payload
-                payload["message"] += " " + line  # Odd way to append, but it works
+                payload["message"] += " " + line # Odd way to append, but it works
 
         # The sad, final message
         payload["message"] = payload["message"].strip()
