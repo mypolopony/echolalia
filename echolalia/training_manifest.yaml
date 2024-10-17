@@ -1,6 +1,9 @@
 # Training Manifest
 # Specifies the desired inputs for training the model.
 
+# Name the manifest
+name: "Training Manifest v.0.1
+
 # Define sources
 sources:
  - user: "+14156839285"
