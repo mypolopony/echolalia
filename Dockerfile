@@ -48,10 +48,10 @@ ENTRYPOINT ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "--wait-for-c
 FROM base as training
 
 # Set the working directory explicitly (for clarity)
-WORKDIR /app
+WORKDIR /app/echolalia
 
 # Set the PYTHONPATH environment variable
 ENV PYTHONPATH=/app
 
-# Command to run the application
-ENTRYPOINT ["python", "echolalia/train.py"]
+# Command to run the application (SageMaker will implicitly add train))
+ENTRYPOINT ["python"]
