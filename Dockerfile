@@ -42,13 +42,16 @@ EXPOSE 5678
 ENTRYPOINT ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "--wait-for-client"]
 
 #########
-# Stage 2, Primary: This is the primary image that will be used for running the application
+# Stage 2, Training: This is the image that will be used for training the model
 #########
 
-FROM base as primary
+FROM base as training
 
 # Set the working directory explicitly (for clarity)
-WORKDIR /app
+WORKDIR /app/echolalia
 
-# Command to run the application
-ENTRYPOINT ["python", "-m"]
+# Set the PYTHONPATH environment variable
+ENV PYTHONPATH=/app
+
+# Command to run the application (SageMaker will implicitly add train))
+ENTRYPOINT ["python"]

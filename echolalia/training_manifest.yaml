@@ -1,0 +1,31 @@
+# Training Manifest
+# Specifies the desired inputs for training the model.
+
+# Name the manifest
+name: "Training Manifest v.0.1"
+
+# Define sources
+sources:
+ - user: "+14156839285"
+   logfile: "data/Cat_iMessage.txt"
+   type: "iMessage"
+ - user: "Cat"
+   logfile: "data/Cat_WhatsApp.txt"
+   type: "WhatsApp"
+
+# Define the model type
+# model_name: "distilgpt2"
+model_name: "gpt2"
+
+# Define training arguments
+training_args:
+    output_dir: "./results"         # Output directory
+    num_train_epochs: 3             # Number of epochs
+    per_device_train_batch_size: 4  # Batch size
+    save_steps: 10000               # Save checkpoint every 10,000 steps
+    save_total_limit: 2             # Limit the total number of checkpoints
+    logging_dir: './logs'           # Directory for logs
+    logging_steps: 500              # Log every 500 steps
+    eval_strategy: "steps"          # Evaluate during training
+    eval_steps: 1000                # Evaluation interval
+    report_to: "none"              # No reporting to W&B
