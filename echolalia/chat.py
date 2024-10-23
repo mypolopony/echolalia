@@ -1,14 +1,15 @@
+import logging
 import random
+
 import boto3
-from botocore.exceptions import ClientError
 import sagemaker
+from botocore.exceptions import ClientError
 from sagemaker.model import Model
 from sagemaker.serverless import ServerlessInferenceConfig
-import logging
 
-from echolalia.constants import SAGEMAKER_ARN, S3_BUCKET_NAME, CHAT_IMAGE_URL
+from echolalia.constants import CHAT_IMAGE_URL, S3_BUCKET_NAME, SAGEMAKER_ARN
 
-    def main():
+def main():
     # Initialize logging
     logging.basicConfig(level=logging.INFO)
 
