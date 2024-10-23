@@ -20,10 +20,10 @@ This package generates a series of containers (debug, train, and chat) to be use
 
 ### Terraform (IaC)
 All AWS resources are Terraformed:
-    - S3 buckets
-    - IAM Roles
-    - SageMaker instances
-    - ECR repositories
+- S3 buckets
+- IAM Roles
+- SageMaker instances
+- ECR repositories
 
 ## Buld management
 - This project uses `pyproject.toml` and `poetry` for dependancy management. Locally, the virtual environment is sym-linked to the poetry, so using `poetry add [package]` installs it in the local environment as well as sets it as a dependancy for use when building the Docker image.
