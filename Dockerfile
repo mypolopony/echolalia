@@ -78,4 +78,4 @@ COPY pyproject.toml poetry.lock ./
 # Install Poetry
 RUN poetry config virtualenvs.create false && poetry install --only chat --no-root --no-interaction --no-ansi
 
-ENTRYPOINT ["python.py"]
+ENTRYPOINT ["python"]
