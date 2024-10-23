@@ -28,4 +28,4 @@ training_args:
     logging_steps: 500              # Log every 500 steps
     eval_strategy: "steps"          # Evaluate during training
     eval_steps: 1000                # Evaluation interval
-    report_to: "none"              # No reporting to W&B
+    report_to: "none"               # No reporting to W&B

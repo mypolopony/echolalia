@@ -42,9 +42,9 @@ Training is done with AWS SageMaker on a GPU-enabled `ml.g4dn.xlarge` machine us
 0. Set up constants
 1. Create and push a training manifest to an appropriate location on S3
 2. Build and push `echolalia` (the training image)
-3. Run the Estimator which will initialize and run the job on SageMaker (example: `notebooks/sagemaker.ipynb`) to generate model files
+3. Run the Estimator which will initialize and run the job on SageMaker (example: `run_sagemaker.py`) to generate model files
 4. Build and push `echolalia-chat` 
-5. Run the Chatbot to have a conversation (example: `notebooks/chat.ipynb`)
+5. Run the Chatbot to have a conversation (example: `chat.py`)
 
 ## Proof
 I should be able to ask the bot contextually dependent phrases (inside jokes, for example, developed over time), and it should respond positively.

@@ -12,7 +12,7 @@ WORKDIR /app
 COPY . .
 
 # Install Poetry
-RUN pip install poetry
+RUN pip install --upgrade pip && pip install poetry
 
 # Install dependencies, without using a virtual environment
 RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi
@@ -55,3 +55,27 @@ ENV PYTHONPATH=/app
 
 # Command to run the application (SageMaker will implicitly add train))
 # ENTRYPOINT ["python"]
+
+#########
+# Stage 3, Chat: This is the slimmer image that will be used for inference
+#########
+
+FROM python:3.11-slim as chat
+
+# Set the working directory in the container    
+WORKDIR /app
+
+# Copy the rest of the application
+COPY . .
+
+# This explicit install of Poetry is not needed since we are using the latest version (for the --group flag)
+# Install curl and the latest version of Poetry
+RUN pip install poetry
+
+# Copy the Poetry files first to leverage Docker caching for dependencies
+COPY pyproject.toml poetry.lock ./
+
+# Install Poetry
+RUN poetry config virtualenvs.create false && poetry install --only chat --no-root --no-interaction --no-ansi
+
+ENTRYPOINT ["python"]

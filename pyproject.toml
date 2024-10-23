@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "echolalia"
-version = "0.1.0"
+version = "1.0.0"
 description = "A familiar voice"
 authors = ["Selwyn-Lloyd McPherson <selwyn.mcpherson@gmail.com>"]
 readme = "README.md"
@@ -19,8 +19,10 @@ transformers = {extras = ["torch"], version = "^4.45.2"}
 sagemaker = "^2.232.2"
 torch = "^2.4.1"
 
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.29.5"
+[tool.poetry.group.chat.dependencies]
+python = "^3.11"
+sagemaker = "^2.232.2"
+boto3 = "^1.35.22"
 
 [tool.black]
 line-length = 110

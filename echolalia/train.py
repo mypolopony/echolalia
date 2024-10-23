@@ -2,7 +2,7 @@ import argparse
 
 import boto3
 import pandas as pd
-import sagemaker
+import echolalia.run_sagemaker as run_sagemaker
 import torch
 import yaml
 from sagemaker.pytorch import PyTorch
