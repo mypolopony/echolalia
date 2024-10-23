@@ -54,4 +54,4 @@ WORKDIR /app/echolalia
 ENV PYTHONPATH=/app
 
 # Command to run the application (SageMaker will implicitly add train))
-ENTRYPOINT ["python"]
+# ENTRYPOINT ["python"]
