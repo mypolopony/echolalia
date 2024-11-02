@@ -2,7 +2,7 @@
 # Specifies the desired inputs for training the model.
 
 # Name the manifest
-name: "Training Manifest v.0.1"
+name: "Training Manifest v.1.1"
 
 # Define sources
 sources:
