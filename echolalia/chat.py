@@ -53,7 +53,8 @@ def main():
         # Chat loop
         while True:
             chat_input = input("Enter your message (or 'exit' to quit): ").strip()
-            
+
+            # Exit case
             if chat_input.lower() == 'exit':
                 logging.info("Exiting chat.")
                 break
@@ -61,7 +62,8 @@ def main():
             if not chat_input:
                 logging.warning("Empty input received. Please enter a valid message.")
                 continue
-            
+
+            # Attempt
             try:
                 response = predictor.predict(chat_input)  # Get model prediction
                 print("Chatbot Response:", response)      # Print the response
