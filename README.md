@@ -29,10 +29,10 @@ All AWS resources are Terraformed:
 - This project uses `pyproject.toml` and `poetry` for dependancy management. Locally, the virtual environment is sym-linked to the poetry, so using `poetry add [package]` installs it in the local environment as well as sets it as a dependancy for use when building the Docker image.
 
 The Docker build is multi-stage. Similarly, `pyproject.toml` contains several groups to correspond to the different dependencies:
-_base_ includes all of the major packages in order to run debugging and training
-_debugger_ includes `pydebug` which can be used to run a local server and allow interactive debugging in Visual Code, for example
-_training_ is the main training image
-_chat_ is a slimmer image used for predictions
+- _base_ includes all of the major packages in order to run debugging and training
+- _debugger_ includes `pydebug` which can be used to run a local server and allow interactive debugging in Visual Code, for example
+- _training_ is the main training image
+- _chat_ is a slimmer image used for predictions
 
 
 ## Training
